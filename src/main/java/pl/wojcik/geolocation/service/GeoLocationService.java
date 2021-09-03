@@ -6,15 +6,16 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 import pl.wojcik.geolocation.exception.ApiRequestException;
 import pl.wojcik.geolocation.exception.ExceptionConstants;
 import pl.wojcik.geolocation.model.GeoLocation;
+import pl.wojcik.geolocation.model.GeoLocationRequest;
 import pl.wojcik.geolocation.model.dto.GeoLocationDTO;
 import pl.wojcik.geolocation.model.mapper.GeoLocationMapper;
 import pl.wojcik.geolocation.repository.GeoLocationRepository;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,9 +43,10 @@ public class GeoLocationService {
     }
 
     @Transactional
-    public ResponseEntity<GeoLocationDTO> saveToDatabase(GeoLocation geoLocation) {
-        if (validateGeoLocation(geoLocation)) {
+    public ResponseEntity<GeoLocationDTO> saveToDatabase(GeoLocationRequest request) {
+        if (validateGeoLocation(request)) {
             logger.info("Saving locations to DB: -> repo layer");
+            GeoLocation geoLocation = GeoLocationMapper.requestToEntity(request);
             GeoLocation location = repository.save(geoLocation);
             GeoLocationDTO geoLocationDTO = GeoLocationMapper.entityToDTO(location);
             logger.info("Sending locationsDTO from DB: <- repo layer");
@@ -54,7 +56,14 @@ public class GeoLocationService {
         }
     }
 
-    private boolean validateGeoLocation(GeoLocation geoLocation) {
-        return geoLocation.getDeviceId() != null && geoLocation.getDeviceId().isBlank();
+    public ResponseEntity<List<GeoLocationDTO>> getLocationsInRange(String latitude, String longitude, String range) {
+        // should be logic to get all locations which are in range from PathVariable
+        // it can be done in many ways: get All location and then filtered, create SQL to filter locations from DB or
+        // specification filtering
+        return new ResponseEntity<>(new ArrayList<>(), HttpStatus.CREATED);
+    }
+
+    private boolean validateGeoLocation(GeoLocationRequest geoLocation) {
+        return geoLocation.getDeviceId() != null && !geoLocation.getDeviceId().isBlank();
     }
 }
